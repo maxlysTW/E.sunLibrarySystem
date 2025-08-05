@@ -1,2 +1,2 @@
 # E.sunLibrarySystem
-E.sunLibrarySystem Java Project
+E.sunLibrarySystem Java Project by Max Lin
