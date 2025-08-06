@@ -91,8 +91,10 @@ export default {
         // 檢查新的API響應格式
         if (response.data.success && response.data.data) {
           const loginData = response.data.data;
+          console.log("Login response data:", loginData); // 調試用
           localStorage.setItem("token", loginData.token);
           localStorage.setItem("userName", loginData.userName);
+          console.log("Stored token:", localStorage.getItem("token")); // 調試用
           ElMessage.success(response.data.message || "登入成功！");
           router.push("/books");
         } else {

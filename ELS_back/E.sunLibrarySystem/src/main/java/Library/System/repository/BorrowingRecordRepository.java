@@ -34,5 +34,12 @@ public interface BorrowingRecordRepository extends JpaRepository<BorrowingRecord
     /**
      * 查詢特定庫存的借閱紀錄
      */
-    Optional<BorrowingRecord> findByInventoryIdAndReturnTimeIsNull(Integer inventoryId);
+    @Query("SELECT br FROM BorrowingRecord br LEFT JOIN FETCH br.inventory i LEFT JOIN FETCH i.book WHERE br.inventoryId = :inventoryId AND br.returnTime IS NULL")
+    Optional<BorrowingRecord> findByInventoryIdAndReturnTimeIsNull(@Param("inventoryId") Integer inventoryId);
+    
+    /**
+     * 根據ID查詢借閱紀錄（包含關聯實體）
+     */
+    @Query("SELECT br FROM BorrowingRecord br LEFT JOIN FETCH br.inventory i LEFT JOIN FETCH i.book LEFT JOIN FETCH br.user WHERE br.recordId = :recordId")
+    Optional<BorrowingRecord> findByIdWithAssociations(@Param("recordId") Integer recordId);
 } 

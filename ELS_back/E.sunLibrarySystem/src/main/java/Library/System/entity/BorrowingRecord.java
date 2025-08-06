@@ -2,6 +2,8 @@ package Library.System.entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -35,10 +37,12 @@ public class BorrowingRecord {
     
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JsonIgnore
     private User user;
     
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "inventory_id", insertable = false, updatable = false)
+    @JsonIgnore
     private Inventory inventory;
     
     // Constructors

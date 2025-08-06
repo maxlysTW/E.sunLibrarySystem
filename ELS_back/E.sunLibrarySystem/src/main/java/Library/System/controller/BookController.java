@@ -29,12 +29,12 @@ public class BookController {
     private BookService bookService;
     
     /**
-     * 查詢所有可借閱的書籍
+     * 查詢所有書籍（包含庫存信息）
      */
     @GetMapping("/available")
     public ResponseEntity<ApiResponse<List<InventoryResponse>>> getAvailableBooks() {
         try {
-            List<InventoryResponse> books = bookService.getAvailableBooks();
+            List<InventoryResponse> books = bookService.getAllBooksWithInventory();
             return ResponseEntity.ok(ApiResponse.success("查詢成功", books));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -88,12 +88,12 @@ public class BookController {
     }
     
     /**
-     * 查詢所有書籍
+     * 查詢所有書籍（包含庫存信息）
      */
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<Book>>> getAllBooks() {
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<InventoryResponse>>> getAllBooks() {
         try {
-            List<Book> books = bookService.findAllBooks();
+            List<InventoryResponse> books = bookService.getAllBooksWithInventory();
             return ResponseEntity.ok(ApiResponse.success("查詢成功", books));
         } catch (Exception e) {
             return ResponseEntity.badRequest()

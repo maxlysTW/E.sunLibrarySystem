@@ -90,6 +90,16 @@ public class BookService {
     }
     
     /**
+     * 查詢所有書籍（包含庫存信息）
+     */
+    public List<InventoryResponse> getAllBooksWithInventory() {
+        List<Inventory> inventories = inventoryRepository.findAllBooks();
+        return inventories.stream()
+                .map(this::convertToInventoryResponse)
+                .collect(Collectors.toList());
+    }
+    
+    /**
      * 檢查書籍是否可借閱
      */
     public boolean isBookAvailable(Integer inventoryId) {
@@ -116,7 +126,7 @@ public class BookService {
         Book book = bookRepository.findById(isbn)
                 .orElseThrow(() -> new RuntimeException("書籍不存在"));
         
-        Inventory inventory = new Inventory(isbn, "在庫");
+        Inventory inventory = new Inventory(isbn, "Available");
         return inventoryRepository.save(inventory);
     }
 } 

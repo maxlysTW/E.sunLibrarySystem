@@ -15,8 +15,14 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     /**
      * 查詢可借閱的書籍
      */
-    @Query("SELECT i FROM Inventory i LEFT JOIN FETCH i.book WHERE i.status = '在庫'")
+    @Query("SELECT i FROM Inventory i LEFT JOIN FETCH i.book WHERE i.status = 'Available'")
     List<Inventory> findAvailableBooks();
+    
+    /**
+     * 查詢所有書籍（包含庫存信息）
+     */
+    @Query("SELECT i FROM Inventory i LEFT JOIN FETCH i.book")
+    List<Inventory> findAllBooks();
     
     /**
      * 根據 ISBN 查詢庫存
@@ -31,6 +37,6 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     /**
      * 檢查書籍是否可借閱
      */
-    @Query("SELECT COUNT(i) > 0 FROM Inventory i WHERE i.inventoryId = :inventoryId AND i.status = '在庫'")
+    @Query("SELECT COUNT(i) > 0 FROM Inventory i WHERE i.inventoryId = :inventoryId AND i.status = 'Available'")
     boolean isBookAvailable(@Param("inventoryId") Integer inventoryId);
 } 

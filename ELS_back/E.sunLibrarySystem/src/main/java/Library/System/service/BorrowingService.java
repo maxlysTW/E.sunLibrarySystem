@@ -3,14 +3,18 @@ package Library.System.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import Library.System.dto.BorrowingResponse;
+import Library.System.entity.Book;
 import Library.System.entity.BorrowingRecord;
 import Library.System.entity.Inventory;
 import Library.System.entity.User;
+import Library.System.repository.BookRepository;
 import Library.System.repository.BorrowingRecordRepository;
 import Library.System.repository.InventoryRepository;
 import Library.System.repository.UserRepository;
@@ -26,6 +30,9 @@ public class BorrowingService {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private BookRepository bookRepository;
     
     /**
      * 借書功能 - 使用資料庫交易確保資料完整性
@@ -47,7 +54,7 @@ public class BorrowingService {
         Inventory inventory = inventoryOpt.get();
         String status = inventory.getStatus();
         System.out.println("Inventory status: " + status); // 調試用
-        if (!"在庫".equals(status)) {
+        if (!"Available".equals(status)) {
             throw new RuntimeException("此書籍目前不可借閱，狀態：" + status);
         }
         
@@ -63,12 +70,16 @@ public class BorrowingService {
         }
         
         // 5. 更新庫存狀態為「已借閱」
-        inventory.setStatus("已借閱");
+        inventory.setStatus("Borrowed");
         inventoryRepository.save(inventory);
         
         // 6. 建立借閱紀錄
         BorrowingRecord record = new BorrowingRecord(userId, inventoryId);
-        return borrowingRecordRepository.save(record);
+        record = borrowingRecordRepository.save(record);
+        
+        // 7. 重新查詢以獲取關聯實體
+        return borrowingRecordRepository.findByIdWithAssociations(record.getRecordId())
+                .orElseThrow(() -> new RuntimeException("借閱紀錄創建失敗"));
     }
     
     /**
@@ -97,29 +108,37 @@ public class BorrowingService {
         Optional<Inventory> inventoryOpt = inventoryRepository.findById(inventoryId);
         if (inventoryOpt.isPresent()) {
             Inventory inventory = inventoryOpt.get();
-            inventory.setStatus("在庫");
+            inventory.setStatus("Available");
             inventoryRepository.save(inventory);
         } else {
             throw new RuntimeException("書籍庫存資料異常");
         }
         
-        return record;
+        // 5. 重新查詢以獲取關聯實體
+        return borrowingRecordRepository.findByIdWithAssociations(record.getRecordId())
+                .orElseThrow(() -> new RuntimeException("借閱紀錄查詢失敗"));
     }
     
     /**
      * 查詢使用者的借閱紀錄
      */
     @Transactional(readOnly = true)
-    public List<BorrowingRecord> getUserBorrowingHistory(Integer userId) {
-        return borrowingRecordRepository.findByUserIdOrderByBorrowingTimeDesc(userId);
+    public List<BorrowingResponse> getUserBorrowingHistory(Integer userId) {
+        List<BorrowingRecord> records = borrowingRecordRepository.findByUserIdOrderByBorrowingTimeDesc(userId);
+        return records.stream()
+                .map(this::convertToBorrowingResponse)
+                .collect(Collectors.toList());
     }
     
     /**
      * 查詢使用者的未歸還書籍
      */
     @Transactional(readOnly = true)
-    public List<BorrowingRecord> getUserActiveBorrowings(Integer userId) {
-        return borrowingRecordRepository.findActiveBorrowingsByUserId(userId);
+    public List<BorrowingResponse> getUserActiveBorrowings(Integer userId) {
+        List<BorrowingRecord> records = borrowingRecordRepository.findActiveBorrowingsByUserId(userId);
+        return records.stream()
+                .map(this::convertToBorrowingResponse)
+                .collect(Collectors.toList());
     }
     
     /**
@@ -136,5 +155,49 @@ public class BorrowingService {
     @Transactional(readOnly = true)
     public boolean isBookAvailable(Integer inventoryId) {
         return inventoryRepository.isBookAvailable(inventoryId);
+    }
+    
+    /**
+     * 將 BorrowingRecord 轉換為 BorrowingResponse
+     */
+    private BorrowingResponse convertToBorrowingResponse(BorrowingRecord record) {
+        String userName = "Unknown";
+        String bookName = "Unknown";
+        String bookAuthor = "Unknown";
+        String bookIsbn = "Unknown";
+        String status = record.getReturnTime() == null ? "借閱中" : "已歸還";
+        
+        if (record.getUser() != null) {
+            userName = record.getUser().getUserName();
+        }
+        
+        // 通過 inventoryId 查詢書籍信息
+        Integer inventoryId = record.getInventoryId();
+        Optional<Inventory> inventoryOpt = inventoryRepository.findById(inventoryId);
+        if (inventoryOpt.isPresent()) {
+            Inventory inventory = inventoryOpt.get();
+            bookIsbn = inventory.getIsbn();
+            
+            // 查詢書籍詳細信息
+            Optional<Book> bookOpt = bookRepository.findById(bookIsbn);
+            if (bookOpt.isPresent()) {
+                Book book = bookOpt.get();
+                bookName = book.getName();
+                bookAuthor = book.getAuthor();
+            }
+        }
+        
+        return new BorrowingResponse(
+            record.getRecordId(),
+            record.getUserId(),
+            inventoryId,
+            record.getBorrowingTime(),
+            record.getReturnTime(),
+            userName,
+            bookName,
+            bookAuthor,
+            bookIsbn,
+            status
+        );
     }
 } 

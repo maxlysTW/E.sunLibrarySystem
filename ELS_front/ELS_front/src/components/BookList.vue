@@ -1,7 +1,7 @@
 <template>
   <div class="book-list">
     <div class="page-header">
-      <h2>可借閱書籍</h2>
+      <h2>圖書館藏書</h2>
     </div>
 
     <div class="book-grid" v-loading="loading">
@@ -18,35 +18,43 @@
           <p><strong>ISBN：</strong>{{ book.isbn }}</p>
           <p>
             <strong>狀態：</strong>
-            <el-tag :type="book.status === '在庫' ? 'success' : 'warning'">
-              {{ book.status }}
+            <el-tag :type="getStatusType(book.status)">
+              {{ getStatusText(book.status) }}
             </el-tag>
           </p>
           <p class="book-introduction">{{ book.book?.introduction }}</p>
 
           <div class="book-actions">
             <el-button
+              v-if="book.status === 'Available'"
               type="primary"
               @click="borrowBook(book.inventoryId)"
-              :disabled="book.status !== '在庫' && book.status !== '??'"
               :loading="borrowingLoading === book.inventoryId"
             >
               借閱
+            </el-button>
+            <el-button
+              v-else-if="book.status === 'Borrowed'"
+              type="info"
+              disabled
+              class="borrowed-button"
+            >
+              已借閱
+            </el-button>
+            <el-button v-else type="warning" disabled>
+              {{ getStatusText(book.status) }}
             </el-button>
           </div>
         </div>
       </div>
     </div>
 
-    <el-empty
-      v-if="books.length === 0 && !loading"
-      description="暫無可借閱的書籍"
-    />
+    <el-empty v-if="books.length === 0 && !loading" description="暫無書籍" />
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { ElMessage } from "element-plus";
 import axios from "axios";
 
@@ -58,9 +66,51 @@ export default {
     const borrowingLoading = ref(null);
     const userName = ref(localStorage.getItem("userName") || "");
 
-    const getAuthHeaders = () => ({
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    });
+    const getAuthHeaders = () => {
+      const token = localStorage.getItem("token");
+      console.log("Current token:", token); // 調試用
+      return {
+        Authorization: `Bearer ${token}`,
+      };
+    };
+
+    const getStatusType = (status) => {
+      switch (status) {
+        case "Available":
+          return "success";
+        case "Borrowed":
+          return "danger";
+        case "Processing":
+          return "warning";
+        case "Lost":
+          return "danger";
+        case "Damaged":
+          return "warning";
+        case "Discarded":
+          return "info";
+        default:
+          return "warning";
+      }
+    };
+
+    const getStatusText = (status) => {
+      switch (status) {
+        case "Available":
+          return "可借閱";
+        case "Borrowed":
+          return "已借閱";
+        case "Processing":
+          return "處理中";
+        case "Lost":
+          return "遺失";
+        case "Damaged":
+          return "損毀";
+        case "Discarded":
+          return "廢棄";
+        default:
+          return status;
+      }
+    };
 
     const fetchBooks = async () => {
       try {
@@ -91,6 +141,9 @@ export default {
     const borrowBook = async (inventoryId) => {
       try {
         borrowingLoading.value = inventoryId;
+        console.log("Attempting to borrow book with inventoryId:", inventoryId);
+        console.log("Request headers:", getAuthHeaders());
+
         const response = await axios.post(
           "http://localhost:8080/api/borrowing/borrow",
           { inventoryId },
@@ -100,7 +153,13 @@ export default {
         // 適應新的API響應格式
         if (response.data.success) {
           ElMessage.success(response.data.message || "借閱成功");
-          await fetchBooks(); // 重新獲取書籍列表
+          // 直接更新當前書籍的狀態，而不是重新獲取整個列表
+          const bookIndex = books.value.findIndex(
+            (book) => book.inventoryId === inventoryId
+          );
+          if (bookIndex !== -1) {
+            books.value[bookIndex].status = "Borrowed";
+          }
         } else {
           ElMessage.error(response.data.message || "借閱失敗");
         }
@@ -116,8 +175,26 @@ export default {
       }
     };
 
+    const handleBookReturned = (event) => {
+      const { inventoryId } = event.detail;
+      // 更新對應書籍的狀態為可借閱
+      const bookIndex = books.value.findIndex(
+        (book) => book.inventoryId === inventoryId
+      );
+      if (bookIndex !== -1) {
+        books.value[bookIndex].status = "Available";
+      }
+    };
+
     onMounted(() => {
       fetchBooks();
+      // 監聽還書事件
+      window.addEventListener("bookReturned", handleBookReturned);
+    });
+
+    onUnmounted(() => {
+      // 移除事件監聽器
+      window.removeEventListener("bookReturned", handleBookReturned);
     });
 
     return {
@@ -126,6 +203,8 @@ export default {
       borrowingLoading,
       userName,
       borrowBook,
+      getStatusType,
+      getStatusText,
     };
   },
 };
@@ -154,7 +233,7 @@ export default {
 
 .book-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
 }
 
@@ -176,12 +255,21 @@ export default {
   width: 100%;
   height: 200px; /* Fixed height for images */
   overflow: hidden;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .book-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+  background-color: #f8f9fa;
+  border-radius: 4px;
 }
 
 .book-info {
@@ -192,27 +280,40 @@ export default {
 .book-info h3 {
   margin: 0 0 10px 0;
   color: #2c3e50;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .book-info p {
   margin: 5px 0;
   color: #666;
   font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .book-introduction {
-  font-size: 14px;
+  font-size: 13px;
   color: #333;
   line-height: 1.4;
-  height: 60px; /* Fixed height for introduction */
+  height: 55px; /* Fixed height for introduction */
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   margin-bottom: 15px;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .book-actions {
@@ -222,5 +323,12 @@ export default {
 
 .el-button {
   width: 100%;
+}
+
+.borrowed-button {
+  background-color: #909399 !important;
+  border-color: #909399 !important;
+  color: #fff !important;
+  opacity: 0.7;
 }
 </style>

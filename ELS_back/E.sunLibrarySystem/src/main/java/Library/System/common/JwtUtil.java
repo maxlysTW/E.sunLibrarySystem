@@ -72,6 +72,7 @@ public class JwtUtil {
                 .setSigningKey(getKey())
                 .build()
                 .parseClaimsJws(token);
+            logger.debug("Token validation successful");
             return true;
         } catch (ExpiredJwtException e) {
             logger.warn("JWT token expired: {}", e.getMessage());
@@ -87,6 +88,9 @@ public class JwtUtil {
             return false;
         } catch (IllegalArgumentException e) {
             logger.warn("JWT token is empty: {}", e.getMessage());
+            return false;
+        } catch (Exception e) {
+            logger.error("Unexpected error during token validation: {}", e.getMessage(), e);
             return false;
         }
     }

@@ -12,8 +12,8 @@
             v-loading="loading"
             style="width: 100%"
           >
-            <el-table-column prop="inventory.book.name" label="書名" />
-            <el-table-column prop="inventory.book.author" label="作者" />
+            <el-table-column prop="bookName" label="書名" />
+            <el-table-column prop="bookAuthor" label="作者" />
             <el-table-column prop="borrowingTime" label="借閱時間">
               <template #default="scope">
                 {{ formatDate(scope.row.borrowingTime) }}
@@ -24,10 +24,8 @@
                 <el-button
                   type="success"
                   size="small"
-                  @click="returnBook(scope.row.inventory.inventoryId)"
-                  :loading="
-                    returningLoading === scope.row.inventory.inventoryId
-                  "
+                  @click="returnBook(scope.row.inventoryId)"
+                  :loading="returningLoading === scope.row.inventoryId"
                 >
                   還書
                 </el-button>
@@ -47,8 +45,8 @@
             v-loading="loading"
             style="width: 100%"
           >
-            <el-table-column prop="inventory.book.name" label="書名" />
-            <el-table-column prop="inventory.book.author" label="作者" />
+            <el-table-column prop="bookName" label="書名" />
+            <el-table-column prop="bookAuthor" label="作者" />
             <el-table-column prop="borrowingTime" label="借閱時間">
               <template #default="scope">
                 {{ formatDate(scope.row.borrowingTime) }}
@@ -178,6 +176,13 @@ export default {
           ElMessage.success(response.data.message || "還書成功");
           await fetchActiveBorrowings();
           await fetchBorrowingHistory();
+
+          // 發送還書成功事件，通知父組件更新書籍列表
+          window.dispatchEvent(
+            new CustomEvent("bookReturned", {
+              detail: { inventoryId },
+            })
+          );
         } else {
           ElMessage.error(response.data.message || "還書失敗");
         }
@@ -219,3 +224,88 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.borrowing-history {
+  padding: 20px;
+}
+
+.page-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.page-header h2 {
+  color: #00c896;
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.history-tabs {
+  margin-top: 20px;
+}
+
+/* 調整標籤位置，讓"未歸還書籍"往右移動 */
+.history-tabs :deep(.el-tabs__header) {
+  margin-bottom: 20px;
+}
+
+.history-tabs :deep(.el-tabs__nav-wrap) {
+  padding-left: 20px; /* 增加左邊距，讓標籤往右移動 */
+}
+
+.history-tabs :deep(.el-tabs__item) {
+  font-size: 16px;
+  padding: 0 30px;
+  height: 40px;
+  line-height: 40px;
+}
+
+.history-tabs :deep(.el-tabs__item.is-active) {
+  color: #00c896;
+  font-weight: bold;
+}
+
+.history-tabs :deep(.el-tabs__active-bar) {
+  background-color: #00c896;
+}
+
+/* 表格樣式 */
+.el-table {
+  margin-top: 10px;
+}
+
+.el-table th {
+  background-color: #f5f7fa;
+  color: #606266;
+  font-weight: bold;
+}
+
+.el-table td {
+  padding: 12px 0;
+}
+
+/* 按鈕樣式 */
+.el-button--success {
+  background-color: #00c896;
+  border-color: #00c896;
+}
+
+.el-button--success:hover {
+  background-color: #00b386;
+  border-color: #00b386;
+}
+
+/* 標籤樣式 */
+.el-tag--success {
+  background-color: #f0f9ff;
+  border-color: #00c896;
+  color: #00c896;
+}
+
+.el-tag--warning {
+  background-color: #fff7e6;
+  border-color: #ffa500;
+  color: #ffa500;
+}
+</style>
