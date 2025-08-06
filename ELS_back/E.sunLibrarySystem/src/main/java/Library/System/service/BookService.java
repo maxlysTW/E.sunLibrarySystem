@@ -2,11 +2,14 @@ package Library.System.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import Library.System.dto.BookResponse;
+import Library.System.dto.InventoryResponse;
 import Library.System.entity.Book;
 import Library.System.entity.Inventory;
 import Library.System.repository.BookRepository;
@@ -25,8 +28,37 @@ public class BookService {
     /**
      * 查詢所有可借閱的書籍
      */
-    public List<Inventory> getAvailableBooks() {
-        return inventoryRepository.findAvailableBooks();
+    public List<InventoryResponse> getAvailableBooks() {
+        List<Inventory> inventories = inventoryRepository.findAvailableBooks();
+        return inventories.stream()
+                .map(this::convertToInventoryResponse)
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * 將 Inventory 轉換為 InventoryResponse
+     */
+    private InventoryResponse convertToInventoryResponse(Inventory inventory) {
+        Book book = inventory.getBook();
+        BookResponse bookResponse = null;
+        
+        if (book != null) {
+            bookResponse = new BookResponse(
+                book.getIsbn(),
+                book.getName(),
+                book.getAuthor(),
+                book.getIntroduction(),
+                book.getImageUrl()
+            );
+        }
+        
+        return new InventoryResponse(
+            inventory.getInventoryId(),
+            inventory.getIsbn(),
+            inventory.getStoreTime(),
+            inventory.getStatus(),
+            bookResponse
+        );
     }
     
     /**

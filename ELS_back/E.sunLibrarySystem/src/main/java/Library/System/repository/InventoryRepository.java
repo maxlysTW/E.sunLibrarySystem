@@ -15,7 +15,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     /**
      * 查詢可借閱的書籍
      */
-    @Query("SELECT i FROM Inventory i WHERE i.status = '在庫'")
+    @Query("SELECT i FROM Inventory i LEFT JOIN FETCH i.book WHERE i.status = '在庫'")
     List<Inventory> findAvailableBooks();
     
     /**

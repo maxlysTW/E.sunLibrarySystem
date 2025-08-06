@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import Library.System.dto.ApiResponse;
+import Library.System.dto.InventoryResponse;
 import Library.System.entity.Book;
 import Library.System.entity.Inventory;
 import Library.System.service.BookService;
@@ -31,9 +32,9 @@ public class BookController {
      * 查詢所有可借閱的書籍
      */
     @GetMapping("/available")
-    public ResponseEntity<ApiResponse<List<Inventory>>> getAvailableBooks() {
+    public ResponseEntity<ApiResponse<List<InventoryResponse>>> getAvailableBooks() {
         try {
-            List<Inventory> books = bookService.getAvailableBooks();
+            List<InventoryResponse> books = bookService.getAvailableBooks();
             return ResponseEntity.ok(ApiResponse.success("查詢成功", books));
         } catch (Exception e) {
             return ResponseEntity.badRequest()

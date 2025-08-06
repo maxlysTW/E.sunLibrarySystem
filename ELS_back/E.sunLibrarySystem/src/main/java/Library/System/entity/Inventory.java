@@ -30,7 +30,7 @@ public class Inventory {
     @Column(name = "status", nullable = false)
     private String status;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "isbn", insertable = false, updatable = false)
     private Book book;
     
