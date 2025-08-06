@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot-Application<E.sunLibrarySystem>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "Library.System.Application",
+      "projectName": "E.sunLibrarySystem",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}

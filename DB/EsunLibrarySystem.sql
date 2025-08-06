@@ -12,6 +12,7 @@ drop table inventory;
 drop table books;
 
 -- for checking tables
+USE EsunLibrarySystem;
 SELECT * FROM users;
 SELECT * FROM books;
 SELECT * FROM inventory;

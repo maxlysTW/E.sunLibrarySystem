@@ -1,13 +1,14 @@
 package Library.System.repository;
 
-import Library.System.entity.BorrowingRecord;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import Library.System.entity.BorrowingRecord;
 
 @Repository
 public interface BorrowingRecordRepository extends JpaRepository<BorrowingRecord, Integer> {
@@ -15,12 +16,13 @@ public interface BorrowingRecordRepository extends JpaRepository<BorrowingRecord
     /**
      * 查詢使用者的借閱紀錄
      */
-    List<BorrowingRecord> findByUserIdOrderByBorrowingTimeDesc(Integer userId);
+    @Query("SELECT br FROM BorrowingRecord br LEFT JOIN FETCH br.inventory i LEFT JOIN FETCH i.book WHERE br.userId = :userId ORDER BY br.borrowingTime DESC")
+    List<BorrowingRecord> findByUserIdOrderByBorrowingTimeDesc(@Param("userId") Integer userId);
     
     /**
      * 查詢使用者的未歸還書籍
      */
-    @Query("SELECT br FROM BorrowingRecord br WHERE br.userId = :userId AND br.returnTime IS NULL")
+    @Query("SELECT br FROM BorrowingRecord br LEFT JOIN FETCH br.inventory i LEFT JOIN FETCH i.book WHERE br.userId = :userId AND br.returnTime IS NULL")
     List<BorrowingRecord> findActiveBorrowingsByUserId(@Param("userId") Integer userId);
     
     /**

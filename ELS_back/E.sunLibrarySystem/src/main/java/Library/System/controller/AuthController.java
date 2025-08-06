@@ -1,18 +1,27 @@
 package Library.System.controller;
 
-import Library.System.common.JwtUtil;
-import Library.System.entity.User;
-import Library.System.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import Library.System.common.JwtUtil;
+import Library.System.dto.ApiResponse;
+import Library.System.dto.LoginRequest;
+import Library.System.dto.UserRegistrationRequest;
+import Library.System.entity.User;
+import Library.System.service.UserService;
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173")
+@Validated
 public class AuthController {
     
     @Autowired
@@ -25,26 +34,24 @@ public class AuthController {
      * 使用者註冊
      */
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> register(@Valid @RequestBody UserRegistrationRequest request) {
         try {
-            String phoneNumber = request.get("phoneNumber");
-            String password = request.get("password");
-            String userName = request.get("userName");
+            User user = userService.registerUser(
+                request.getPhoneNumber(), 
+                request.getPassword(), 
+                request.getUserName()
+            );
             
-            if (phoneNumber == null || password == null || userName == null) {
-                return ResponseEntity.badRequest().body("所有欄位都必須填寫");
-            }
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("userId", user.getUserId());
+            userData.put("userName", user.getUserName());
+            userData.put("phoneNumber", user.getPhoneNumber());
+            userData.put("registrationTime", user.getRegistrationTime());
             
-            User user = userService.registerUser(phoneNumber, password, userName);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "註冊成功");
-            response.put("userId", user.getUserId());
-            response.put("userName", user.getUserName());
-            
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success("註冊成功", userData));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(e.getMessage(), "REGISTRATION_ERROR"));
         }
     }
     
@@ -52,30 +59,24 @@ public class AuthController {
      * 使用者登入
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> login(@Valid @RequestBody LoginRequest request) {
         try {
-            String phoneNumber = request.get("phoneNumber");
-            String password = request.get("password");
-            
-            if (phoneNumber == null || password == null) {
-                return ResponseEntity.badRequest().body("手機號碼和密碼都必須填寫");
-            }
-            
-            User user = userService.loginUser(phoneNumber, password);
+            User user = userService.loginUser(request.getPhoneNumber(), request.getPassword());
             
             // 生成 JWT Token
             String token = jwtUtil.generateToken(user.getUserId(), user.getPhoneNumber());
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "登入成功");
-            response.put("token", token);
-            response.put("userId", user.getUserId());
-            response.put("userName", user.getUserName());
-            response.put("phoneNumber", user.getPhoneNumber());
+            Map<String, Object> loginData = new HashMap<>();
+            loginData.put("token", token);
+            loginData.put("userId", user.getUserId());
+            loginData.put("userName", user.getUserName());
+            loginData.put("phoneNumber", user.getPhoneNumber());
+            loginData.put("lastLoginTime", user.getLastLoginTime());
             
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success("登入成功", loginData));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(e.getMessage(), "LOGIN_ERROR"));
         }
     }
 } 

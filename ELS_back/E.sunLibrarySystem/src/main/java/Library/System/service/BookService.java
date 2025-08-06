@@ -1,15 +1,16 @@
 package Library.System.service;
 
-import Library.System.entity.Book;
-import Library.System.entity.Inventory;
-import Library.System.repository.BookRepository;
-import Library.System.repository.InventoryRepository;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import Library.System.entity.Book;
+import Library.System.entity.Inventory;
+import Library.System.repository.BookRepository;
+import Library.System.repository.InventoryRepository;
 
 @Service
 @Transactional
@@ -61,5 +62,29 @@ public class BookService {
      */
     public boolean isBookAvailable(Integer inventoryId) {
         return inventoryRepository.isBookAvailable(inventoryId);
+    }
+    
+    /**
+     * 添加書籍
+     */
+    public Book addBook(String isbn, String name, String author, String introduction, String imageUrl) {
+        Book book = new Book();
+        book.setIsbn(isbn);
+        book.setName(name);
+        book.setAuthor(author);
+        book.setIntroduction(introduction);
+        book.setImageUrl(imageUrl);
+        return bookRepository.save(book);
+    }
+    
+    /**
+     * 添加庫存
+     */
+    public Inventory addInventory(String isbn) {
+        Book book = bookRepository.findById(isbn)
+                .orElseThrow(() -> new RuntimeException("書籍不存在"));
+        
+        Inventory inventory = new Inventory(isbn, "在庫");
+        return inventoryRepository.save(inventory);
     }
 } 

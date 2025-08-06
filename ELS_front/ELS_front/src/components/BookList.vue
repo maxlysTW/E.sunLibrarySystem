@@ -1,45 +1,42 @@
 <template>
   <div class="book-list">
-    <el-row :gutter="20">
-      <el-col :span="24">
-        <h2>可借閱書籍</h2>
-        <p>歡迎，{{ userName }}！</p>
-      </el-col>
-    </el-row>
+    <div class="page-header">
+      <h2>可借閱書籍</h2>
+    </div>
 
-    <el-row :gutter="20" v-loading="loading">
-      <el-col :span="8" v-for="book in books" :key="book.inventoryId">
-        <el-card class="book-card" shadow="hover">
-          <div class="book-image">
-            <img
-              :src="book.book?.imageUrl || '/default-book.jpg'"
-              :alt="book.book?.name"
-            />
-          </div>
-          <div class="book-info">
-            <h3>{{ book.book?.name }}</h3>
-            <p><strong>作者：</strong>{{ book.book?.author }}</p>
-            <p><strong>ISBN：</strong>{{ book.isbn }}</p>
-            <p>
-              <strong>狀態：</strong>
-              <el-tag :type="book.status === '在庫' ? 'success' : 'warning'">
-                {{ book.status }}
-              </el-tag>
-            </p>
-            <p class="book-introduction">{{ book.book?.introduction }}</p>
+    <div class="book-grid" v-loading="loading">
+      <div class="book-card" v-for="book in books" :key="book.inventoryId">
+        <div class="book-image">
+          <img
+            :src="book.book?.imageUrl || '/default-book.jpg'"
+            :alt="book.book?.name"
+          />
+        </div>
+        <div class="book-info">
+          <h3>{{ book.book?.name }}</h3>
+          <p><strong>作者：</strong>{{ book.book?.author }}</p>
+          <p><strong>ISBN：</strong>{{ book.isbn }}</p>
+          <p>
+            <strong>狀態：</strong>
+            <el-tag :type="book.status === '在庫' ? 'success' : 'warning'">
+              {{ book.status }}
+            </el-tag>
+          </p>
+          <p class="book-introduction">{{ book.book?.introduction }}</p>
 
+          <div class="book-actions">
             <el-button
               type="primary"
               @click="borrowBook(book.inventoryId)"
-              :disabled="book.status !== '在庫'"
+              :disabled="book.status !== '在庫' && book.status !== '??'"
               :loading="borrowingLoading === book.inventoryId"
             >
               借閱
             </el-button>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </div>
+      </div>
+    </div>
 
     <el-empty
       v-if="books.length === 0 && !loading"
@@ -71,9 +68,20 @@ export default {
         const response = await axios.get(
           "http://localhost:8080/api/books/available"
         );
-        books.value = response.data;
+        // 適應新的API響應格式
+        if (response.data.success && response.data.data) {
+          books.value = response.data.data;
+        } else {
+          books.value = [];
+          ElMessage.error(response.data.message || "獲取書籍列表失敗");
+        }
       } catch (error) {
-        ElMessage.error("獲取書籍列表失敗");
+        if (error.response && error.response.data) {
+          const errorData = error.response.data;
+          ElMessage.error(errorData.message || "獲取書籍列表失敗");
+        } else {
+          ElMessage.error("獲取書籍列表失敗");
+        }
         console.error(error);
       } finally {
         loading.value = false;
@@ -83,17 +91,23 @@ export default {
     const borrowBook = async (inventoryId) => {
       try {
         borrowingLoading.value = inventoryId;
-        await axios.post(
+        const response = await axios.post(
           "http://localhost:8080/api/borrowing/borrow",
           { inventoryId },
           { headers: getAuthHeaders() }
         );
 
-        ElMessage.success("借閱成功");
-        await fetchBooks(); // 重新獲取書籍列表
+        // 適應新的API響應格式
+        if (response.data.success) {
+          ElMessage.success(response.data.message || "借閱成功");
+          await fetchBooks(); // 重新獲取書籍列表
+        } else {
+          ElMessage.error(response.data.message || "借閱失敗");
+        }
       } catch (error) {
-        if (error.response) {
-          ElMessage.error(error.response.data || "借閱失敗");
+        if (error.response && error.response.data) {
+          const errorData = error.response.data;
+          ElMessage.error(errorData.message || "借閱失敗");
         } else {
           ElMessage.error("網路錯誤，請稍後再試");
         }
@@ -122,9 +136,36 @@ export default {
   padding: 20px;
 }
 
-.book-card {
+.page-header {
   margin-bottom: 20px;
-  transition: transform 0.3s;
+  text-align: center;
+}
+
+.page-header h2 {
+  color: #00c896;
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.page-header p {
+  color: white;
+  font-size: 16px;
+}
+
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.book-card {
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
 }
 
 .book-card:hover {
@@ -132,36 +173,51 @@ export default {
 }
 
 .book-image {
-  text-align: center;
-  margin-bottom: 15px;
+  width: 100%;
+  height: 200px; /* Fixed height for images */
+  overflow: hidden;
 }
 
 .book-image img {
-  max-width: 200px;
-  max-height: 250px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 8px;
+}
+
+.book-info {
+  padding: 15px;
+  flex-grow: 1;
 }
 
 .book-info h3 {
   margin: 0 0 10px 0;
   color: #2c3e50;
   font-size: 18px;
+  font-weight: bold;
 }
 
 .book-info p {
   margin: 5px 0;
   color: #666;
+  font-size: 14px;
 }
 
 .book-introduction {
-  max-height: 60px;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+  height: 60px; /* Fixed height for introduction */
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   margin-bottom: 15px;
+}
+
+.book-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .el-button {

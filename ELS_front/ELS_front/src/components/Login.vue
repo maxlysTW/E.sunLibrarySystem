@@ -1,40 +1,49 @@
 <template>
-  <div class="login-container">
-    <el-card class="login-card">
+  <div class="auth-container">
+    <el-card class="auth-card">
       <template #header>
-        <h2>玉山圖書館系統 - 登入</h2>
+        <div class="auth-card-header">
+          <h2>玉山圖書館系統 - 登入</h2>
+        </div>
       </template>
 
-      <el-form
-        :model="loginForm"
-        :rules="rules"
-        ref="loginFormRef"
-        label-width="100px"
-      >
-        <el-form-item label="手機號碼" prop="phoneNumber">
-          <el-input
-            v-model="loginForm.phoneNumber"
-            placeholder="請輸入手機號碼"
-            maxlength="10"
-          />
-        </el-form-item>
+      <div class="auth-card-body">
+        <el-form
+          :model="loginForm"
+          :rules="rules"
+          ref="loginFormRef"
+          label-width="100px"
+          class="auth-form"
+        >
+          <el-form-item label="手機號碼" prop="phoneNumber">
+            <el-input
+              v-model="loginForm.phoneNumber"
+              placeholder="請輸入手機號碼"
+              maxlength="10"
+              clearable
+            />
+          </el-form-item>
 
-        <el-form-item label="密碼" prop="password">
-          <el-input
-            v-model="loginForm.password"
-            type="password"
-            placeholder="請輸入密碼"
-            show-password
-          />
-        </el-form-item>
+          <el-form-item label="密碼" prop="password">
+            <el-input
+              v-model="loginForm.password"
+              type="password"
+              placeholder="請輸入密碼"
+              show-password
+              clearable
+            />
+          </el-form-item>
 
-        <el-form-item>
-          <el-button type="primary" @click="handleLogin" :loading="loading">
-            登入
-          </el-button>
-          <el-button @click="$router.push('/register')"> 註冊新帳號 </el-button>
-        </el-form-item>
-      </el-form>
+          <div class="auth-buttons">
+            <el-button type="primary" @click="handleLogin" :loading="loading">
+              登入
+            </el-button>
+            <el-button @click="$router.push('/register')">
+              註冊新帳號
+            </el-button>
+          </div>
+        </el-form>
+      </div>
     </el-card>
   </div>
 </template>
@@ -79,17 +88,26 @@ export default {
           loginForm
         );
 
-        if (response.data.token) {
-          localStorage.setItem("token", response.data.token);
-          localStorage.setItem("userName", response.data.userName);
-          ElMessage.success("登入成功");
+        // 檢查新的API響應格式
+        if (response.data.success && response.data.data) {
+          const loginData = response.data.data;
+          localStorage.setItem("token", loginData.token);
+          localStorage.setItem("userName", loginData.userName);
+          ElMessage.success(response.data.message || "登入成功！");
           router.push("/books");
+        } else {
+          ElMessage.error(response.data.message || "登入失敗");
         }
       } catch (error) {
-        if (error.response) {
-          ElMessage.error(error.response.data || "登入失敗");
+        if (error.response && error.response.data) {
+          // 處理新的API錯誤格式
+          const errorData = error.response.data;
+          const errorMessage = errorData.message || "登入失敗";
+          ElMessage.error(errorMessage);
+        } else if (error.request) {
+          ElMessage.error("網路連線錯誤，請檢查網路設定");
         } else {
-          ElMessage.error("網路錯誤，請稍後再試");
+          ElMessage.error("發生未知錯誤，請稍後再試");
         }
       } finally {
         loading.value = false;
@@ -106,27 +124,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.login-card {
-  width: 400px;
-}
-
-.login-card :deep(.el-card__header) {
-  text-align: center;
-  background: #f8f9fa;
-}
-
-.login-card h2 {
-  margin: 0;
-  color: #2c3e50;
-}
-</style>

@@ -4,7 +4,7 @@ import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 import App from "./App.vue";
-import "./style.css";
+import "./styles/main.css";
 
 // 路由配置
 import Login from "./components/Login.vue";
@@ -32,7 +32,11 @@ router.beforeEach((to, from, next) => {
   const authRequired = !publicPages.includes(to.path);
 
   if (authRequired && !token) {
+    // 需要登入但沒有token，重定向到登入頁面
     next("/login");
+  } else if (token && (to.path === "/login" || to.path === "/register")) {
+    // 已登入但訪問登入/註冊頁面，重定向到圖書館頁面
+    next("/books");
   } else {
     next();
   }
