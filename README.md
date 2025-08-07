@@ -7,7 +7,7 @@ Demo Video: https://youtu.be/8SwSMkfDs4c
 - 專案名稱：玉山圖書館借閱系統
 - 技術要求：Spring Boot + Vue.js + SQL Server
 - 完成日期：2025 年 8 月 7 日
-- 花費時間：共約20hr
+- 花費時間：約16hr
 
 ## 開發流程
 - 確認資料庫架構與型別
@@ -64,45 +64,51 @@ Demo Video: https://youtu.be/8SwSMkfDs4c
 ## 專案結構
 ```
 E.sunLibrarySystem/
-├── DB/                          # 資料庫相關
-│   └── EsunLibrarySystem.sql   # 資料庫建置腳本
-├── ELS_back/                    # 後端專案
+├── DB/                                            # 資料庫相關
+│   └── EsunLibrarySystem.sql                      # 資料庫建置腳本
+├── ELS_back/                                      # 後端專案
 │   └── E.sunLibrarySystem/
 │       ├── src/main/java/Library/System/
-│       │   ├── Application.java           # 主應用程式
-│       │   ├── common/                    # 共用層
-│       │   │   ├── PasswordUtil.java     # 密碼工具
-│       │   │   └── JwtUtil.java          # JWT 工具
-│       │   ├── controller/                # 展示層
-│       │   │   ├── AuthController.java   # 認證控制器
-│       │   │   ├── BookController.java   # 書籍控制器
-│       │   │   └── BorrowingController.java # 借閱控制器
-│       │   ├── service/                   # 業務層
-│       │   │   ├── UserService.java      # 使用者服務
-│       │   │   ├── BookService.java      # 書籍服務
-│       │   │   └── BorrowingService.java # 借閱服務
-│       │   ├── repository/                # 資料層
-│       │   │   ├── UserRepository.java   # 使用者資料存取
-│       │   │   ├── BookRepository.java   # 書籍資料存取
-│       │   │   ├── InventoryRepository.java # 庫存資料存取
+│       │   ├── Application.java                   # 主應用程式
+│       │   ├── common/                            # 共用層
+│       │   │   ├── PasswordUtil.java              # 密碼工具
+│       │   │   └── JwtUtil.java                   # JWT 工具
+│       │   ├── controller/                        # 展示層
+│       │   │   ├── AuthController.java            # 認證控制器
+│       │   │   ├── BookController.java            # 書籍控制器
+│       │   │   └── BorrowingController.java       # 借閱控制器
+│       │   ├── service/                           # 業務層
+│       │   │   ├── UserService.java               # 使用者服務
+│       │   │   ├── BookService.java               # 書籍服務
+│       │   │   └── BorrowingService.java          # 借閱服務
+│       │   ├── repository/                        # 資料層
+│       │   │   ├── UserRepository.java            # 使用者資料存取
+│       │   │   ├── BookRepository.java            # 書籍資料存取
+│       │   │   ├── InventoryRepository.java       # 庫存資料存取
 │       │   │   └── BorrowingRecordRepository.java # 借閱紀錄資料存取
-│       │   └── entity/                    # 實體類別
-│       │       ├── User.java             # 使用者實體
-│       │       ├── Book.java             # 書籍實體
-│       │       ├── Inventory.java        # 庫存實體
-│       │       └── BorrowingRecord.java  # 借閱紀錄實體
-│       └── pom.xml                        # Maven 配置
-└── ELS_front/                    # 前端專案
+│       │   └── entity/                            # 實體類別
+│       │       ├── User.java                      # 使用者實體
+│       │       ├── Book.java                      # 書籍實體
+│       │       ├── Inventory.java                 # 庫存實體
+│       │       └── BorrowingRecord.java           # 借閱紀錄實體
+│       └── pom.xml                                # Maven 配置
+└── ELS_front/                                     # 前端專案
     └── ELS_front/
         ├── src/
-        │   ├── components/               # Vue 組件
-        │   │   ├── Login.vue            # 登入組件
-        │   │   ├── Register.vue         # 註冊組件
-        │   │   ├── BookList.vue         # 書籍列表組件
-        │   │   └── BorrowingHistory.vue # 借閱紀錄組件
-        │   ├── App.vue                  # 主應用組件
-        │   └── main.js                  # 應用程式入口
-        └── package.json                 # NPM 配置
+        │   ├── components/                        # Vue 組件
+        │   │   ├── Login.vue                      # 登入組件
+        │   │   ├── Register.vue                   # 註冊組件
+        │   │   ├── BookList.vue                   # 書籍列表組件
+        │   │   └── BorrowingHistory.vue           # 借閱紀錄組件
+        │   ├── services/                          # API 統整
+        │   │   ├── api.js                         # API 基礎配置
+        │   │   ├── authService.js                 # 認證相關API
+        │   │   ├── bookService.js                 # 書籍相關API
+        │   │   ├── borrowingService.js            # 借書相關API
+        │   │   └── index.js                       # 統一匯出窗口
+        │   ├── App.vue                            # 主應用組件
+        │   └── main.js                            # 應用程式入口
+        └── package.json                           # NPM 配置
 ```
 
 ## 安裝與執行
