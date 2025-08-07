@@ -1,5 +1,6 @@
 # 玉山圖書館借閱系統
 這是一個基於 Spring Boot + Vue.js 的前後分離技術之線上圖書借閱系統。
+Demo Video: https://youtu.be/8GFEu_dkTZs
 
 ## 開發者
 - 開發者：林渝舜
