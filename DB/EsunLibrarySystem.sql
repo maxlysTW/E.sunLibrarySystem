@@ -29,6 +29,8 @@ USE master;
 GO
 IF EXISTS (SELECT * FROM sys.databases WHERE name = 'EsunLibrarySystem')
 BEGIN
+    -- Force close all connections to the database
+    ALTER DATABASE EsunLibrarySystem SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
     DROP DATABASE EsunLibrarySystem;
 END
 GO

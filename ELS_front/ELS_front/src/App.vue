@@ -1,26 +1,60 @@
+<!-- 此Component是應用程式的根組件，負責整體布局、路由管理和使用者認證狀態 -->
+
 <script setup>
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
 const router = useRouter();
 const route = useRoute();
 
+// 使用 ref 來追蹤登入狀態，確保響應性
+const loginState = ref({
+  token: localStorage.getItem("token"),
+  userName: localStorage.getItem("userName") || "",
+});
+
+// 計算屬性：檢查使用者是否已登入
 const isLoggedIn = computed(() => {
-  return localStorage.getItem("token") !== null;
+  return loginState.value.token !== null;
 });
 
+// 計算屬性：取得使用者名稱
 const userName = computed(() => {
-  return localStorage.getItem("userName") || "";
+  return loginState.value.userName;
 });
 
-// 檢查當前是否在登入或註冊頁面
+// 計算屬性：檢查當前是否在登入或註冊頁面
 const isAuthPage = computed(() => {
   return route.path === "/login" || route.path === "/register";
 });
 
+// 更新登入狀態的函式
+const updateLoginState = () => {
+  loginState.value = {
+    token: localStorage.getItem("token"),
+    userName: localStorage.getItem("userName") || "",
+  };
+};
+
+// 監聽 localStorage 變化（跨標籤頁同步）
+window.addEventListener("storage", updateLoginState);
+
+// 監聽登入狀態變化事件
+window.addEventListener("loginStateChanged", updateLoginState);
+
+// 監聽路由變化並更新登入狀態
+watch(
+  () => route.path,
+  () => {
+    updateLoginState();
+  }
+);
+
+// 登出功能
 const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("userName");
+  updateLoginState();
   router.push("/login");
 };
 </script>
@@ -116,12 +150,12 @@ const logout = () => {
 
 <template>
   <div id="app">
-    <!-- 登入/註冊頁面 - 沒有導航欄和側邊欄 -->
+    <!-- 登入/註冊頁面布局 - 沒有導航欄和側邊欄 -->
     <div v-if="isAuthPage" class="auth-layout">
       <router-view />
     </div>
 
-    <!-- 登入後的主畫面 - 有導航欄和側邊欄 -->
+    <!-- 登入後的主畫面布局 - 有導航欄和側邊欄 -->
     <el-container v-else-if="isLoggedIn" class="main-layout">
       <!-- 頂部導航欄 -->
       <el-header class="header">
@@ -130,6 +164,7 @@ const logout = () => {
             <h2>玉山圖書館系統</h2>
           </div>
           <div class="header-right">
+            <!-- 歡迎訊息和登出按鈕 -->
             <span class="welcome-text">歡迎，{{ userName }}！</span>
             <el-button type="danger" @click="logout" size="small">
               登出
@@ -149,9 +184,11 @@ const logout = () => {
             text-color="#fff"
             active-text-color="#ffd04b"
           >
+            <!-- 圖書館頁面選單項目 -->
             <el-menu-item index="/books">
               <span>圖書館</span>
             </el-menu-item>
+            <!-- 借閱歷史頁面選單項目 -->
             <el-menu-item index="/history">
               <span>我的書單</span>
             </el-menu-item>
@@ -161,13 +198,14 @@ const logout = () => {
         <!-- 主要內容區域 -->
         <el-container>
           <el-main>
+            <!-- 路由視圖，顯示當前頁面的組件 -->
             <router-view />
           </el-main>
         </el-container>
       </el-container>
     </el-container>
 
-    <!-- 未登入且不在登入/註冊頁面時，重定向到登入頁面 -->
+    <!-- 未登入且不在登入/註冊頁面時的處理 -->
     <div v-else>
       <router-view />
     </div>

@@ -20,9 +20,16 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        System.out.println("開始檢查資料初始化...");
+        long bookCount = bookRepository.count();
+        System.out.println("當前書籍數量: " + bookCount);
+        
         // 檢查是否已有資料
-        if (bookRepository.count() == 0) {
+        if (bookCount == 0) {
+            System.out.println("沒有書籍資料，開始初始化...");
             initializeBooks();
+        } else {
+            System.out.println("已有書籍資料，跳過初始化");
         }
     }
 

@@ -1,5 +1,8 @@
+<!-- 此Component負責使用者註冊功能 -->
+
 <template>
   <div class="auth-container">
+    <!-- 註冊表單卡片 -->
     <el-card class="auth-card">
       <template #header>
         <div class="auth-card-header">
@@ -8,6 +11,7 @@
       </template>
 
       <div class="auth-card-body">
+        <!-- 註冊表單，包含驗證規則 -->
         <el-form
           :model="registerForm"
           :rules="rules"
@@ -15,6 +19,7 @@
           label-width="100px"
           class="auth-form"
         >
+          <!-- 手機號碼輸入欄位 -->
           <el-form-item label="手機號碼" prop="phoneNumber">
             <el-input
               v-model="registerForm.phoneNumber"
@@ -24,6 +29,7 @@
             />
           </el-form-item>
 
+          <!-- 使用者名稱輸入欄位 -->
           <el-form-item label="使用者名稱" prop="userName">
             <el-input
               v-model="registerForm.userName"
@@ -32,6 +38,7 @@
             />
           </el-form-item>
 
+          <!-- 密碼輸入欄位 -->
           <el-form-item label="密碼" prop="password">
             <el-input
               v-model="registerForm.password"
@@ -42,6 +49,7 @@
             />
           </el-form-item>
 
+          <!-- 確認密碼輸入欄位 -->
           <el-form-item label="確認密碼" prop="confirmPassword">
             <el-input
               v-model="registerForm.confirmPassword"
@@ -52,7 +60,9 @@
             />
           </el-form-item>
 
+          <!-- 操作按鈕區域 -->
           <div class="auth-buttons">
+            <!-- 註冊按鈕，顯示載入狀態 -->
             <el-button
               type="primary"
               @click="handleRegister"
@@ -60,6 +70,7 @@
             >
               註冊
             </el-button>
+            <!-- 返回登入按鈕 -->
             <el-button @click="$router.push('/login')"> 返回登入 </el-button>
           </div>
         </el-form>
@@ -78,9 +89,10 @@ export default {
   name: "Register",
   setup() {
     const router = useRouter();
-    const registerFormRef = ref();
-    const loading = ref(false);
+    const registerFormRef = ref(); // 表單引用
+    const loading = ref(false); // 註冊按鈕載入狀態
 
+    // 註冊表單資料
     const registerForm = reactive({
       phoneNumber: "",
       userName: "",
@@ -88,6 +100,7 @@ export default {
       confirmPassword: "",
     });
 
+    // 自訂密碼確認驗證器
     const validateConfirmPassword = (rule, value, callback) => {
       if (value === "") {
         callback(new Error("請再次輸入密碼"));
@@ -98,6 +111,7 @@ export default {
       }
     };
 
+    // 表單驗證規則
     const rules = {
       phoneNumber: [
         { required: true, message: "請輸入手機號碼", trigger: "blur" },
@@ -125,11 +139,14 @@ export default {
       ],
     };
 
+    // 處理註冊提交
     const handleRegister = async () => {
       try {
+        // 驗證表單
         await registerFormRef.value.validate();
         loading.value = true;
 
+        // 發送註冊請求
         const response = await axios.post(
           "http://localhost:8080/api/auth/register",
           {
@@ -139,18 +156,20 @@ export default {
           }
         );
 
-        // 檢查新的API響應格式
+        // 檢查 API 回應格式並處理註冊成功
         if (response.data.success) {
           ElMessage.success(
             response.data.message || "註冊成功！請使用新帳號登入"
           );
+          // 註冊成功後跳轉到登入頁面
           router.push("/login");
         } else {
           ElMessage.error(response.data.message || "註冊失敗");
         }
       } catch (error) {
+        // 錯誤處理
         if (error.response && error.response.data) {
-          // 處理新的API錯誤格式
+          // 處理 API 錯誤回應
           const errorData = error.response.data;
           const errorMessage = errorData.message || "註冊失敗";
           ElMessage.error(errorMessage);

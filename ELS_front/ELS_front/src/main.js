@@ -42,6 +42,14 @@ router.beforeEach((to, from, next) => {
   }
 });
 
+// 路由後置守衛，確保組件正確渲染
+router.afterEach((to, from) => {
+  // 觸發登入狀態更新事件
+  if (to.path !== "/login" && to.path !== "/register") {
+    window.dispatchEvent(new CustomEvent("loginStateChanged"));
+  }
+});
+
 const app = createApp(App);
 
 // 註冊所有圖標

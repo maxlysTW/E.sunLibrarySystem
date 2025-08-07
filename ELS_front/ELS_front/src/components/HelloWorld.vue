@@ -1,17 +1,23 @@
-<script setup>
-import { ref } from 'vue'
+<!-- 此Component是Vue+Vite的示例組件，用於展示基本功能和開發工具 -->
 
+<script setup>
+import { ref } from "vue";
+
+// 接收從父組件傳入的訊息屬性
 defineProps({
   msg: String,
-})
+});
 
-const count = ref(0)
+// 計數器狀態，用於展示響應式資料
+const count = ref(0);
 </script>
 
 <template>
+  <!-- 顯示從父組件傳入的訊息 -->
   <h1>{{ msg }}</h1>
 
   <div class="card">
+    <!-- 互動式計數器按鈕，展示事件處理 -->
     <button type="button" @click="count++">count is {{ count }}</button>
     <p>
       Edit
@@ -19,6 +25,7 @@ const count = ref(0)
     </p>
   </div>
 
+  <!-- 開發相關連結和說明 -->
   <p>
     Check out
     <a href="https://vuejs.org/guide/quick-start.html#local" target="_blank"
