@@ -16,7 +16,7 @@ Demo Video: https://youtu.be/8GFEu_dkTZs
 - 透過git 連結github 進行版本控制與備份
 
 ## 系統架構
-### 後端技術棧
+### 後端技術
 - **Spring Boot 3.5.4** - 主要框架
 - **Spring Security** - 身份驗證與授權
 - **Spring Data JPA** - 資料存取層
@@ -24,7 +24,7 @@ Demo Video: https://youtu.be/8GFEu_dkTZs
 - **JWT** - Token 認證
 - **Maven** - 專案管理工具
 
-### 前端技術棧
+### 前端技術
 - **Vue.js 3** - 前端框架
 - **Vue Router** - 路由管理
 - **Element Plus** - UI 組件庫
