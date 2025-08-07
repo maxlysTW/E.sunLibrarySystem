@@ -15,6 +15,10 @@ Demo Video: https://youtu.be/8GFEu_dkTZs
 - 使用Vite 建立 Vue 前端資料夾
 - 透過git 連結github 進行版本控制與備份
 
+## DB schema
+<img width="2404" height="1256" alt="schema-EsunLibrarySystem" src="https://github.com/user-attachments/assets/ef07d1f3-f7e3-4e41-a3a0-dbbfeb76e17c" />
+
+
 ## 系統架構
 ### 後端技術
 - **Spring Boot 3.5.4** - 主要框架
