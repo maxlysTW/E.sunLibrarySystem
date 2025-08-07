@@ -64,7 +64,7 @@
 <script>
 import { ref, onMounted, onUnmounted } from "vue";
 import { ElMessage } from "element-plus";
-import axios from "axios";
+import { bookService, borrowingService } from "../services";
 
 export default {
   name: "BookList",
@@ -73,15 +73,6 @@ export default {
     const loading = ref(false); // 載入狀態
     const borrowingLoading = ref(null); // 借閱按鈕 loading 狀態
     const userName = ref(localStorage.getItem("userName") || ""); // 使用者名稱
-
-    // 取得授權標頭
-    const getAuthHeaders = () => {
-      const token = localStorage.getItem("token");
-      console.log("Current token:", token); // 調試用
-      return {
-        Authorization: `Bearer ${token}`,
-      };
-    };
 
     // 根據狀態取得標籤顏色
     const getStatusType = (status) => {
@@ -127,24 +118,17 @@ export default {
     const fetchBooks = async () => {
       try {
         loading.value = true;
-        const response = await axios.get(
-          "http://localhost:8080/api/books/available"
-        );
+        const response = await bookService.getAvailableBooks();
+
         // 根據 API 回傳格式設定書籍資料
-        if (response.data.success && response.data.data) {
-          books.value = response.data.data;
+        if (response.success && response.data) {
+          books.value = response.data;
         } else {
           books.value = [];
-          ElMessage.error(response.data.message || "獲取書籍列表失敗");
         }
       } catch (error) {
-        if (error.response && error.response.data) {
-          const errorData = error.response.data;
-          ElMessage.error(errorData.message || "獲取書籍列表失敗");
-        } else {
-          ElMessage.error("獲取書籍列表失敗");
-        }
-        console.error(error);
+        console.error("Failed to fetch books:", error);
+        books.value = [];
       } finally {
         loading.value = false;
       }
@@ -155,17 +139,12 @@ export default {
       try {
         borrowingLoading.value = inventoryId;
         console.log("Attempting to borrow book with inventoryId:", inventoryId);
-        console.log("Request headers:", getAuthHeaders());
 
-        const response = await axios.post(
-          "http://localhost:8080/api/borrowing/borrow",
-          { inventoryId },
-          { headers: getAuthHeaders() }
-        );
+        const response = await borrowingService.borrowBook(inventoryId);
 
         // 借閱成功後更新狀態
-        if (response.data.success) {
-          ElMessage.success(response.data.message || "借閱成功");
+        if (response.success) {
+          ElMessage.success(response.message || "借閱成功");
           // 只更新該書籍狀態
           const bookIndex = books.value.findIndex(
             (book) => book.inventoryId === inventoryId
@@ -173,16 +152,9 @@ export default {
           if (bookIndex !== -1) {
             books.value[bookIndex].status = "Borrowed";
           }
-        } else {
-          ElMessage.error(response.data.message || "借閱失敗");
         }
       } catch (error) {
-        if (error.response && error.response.data) {
-          const errorData = error.response.data;
-          ElMessage.error(errorData.message || "借閱失敗");
-        } else {
-          ElMessage.error("網路錯誤，請稍後再試");
-        }
+        console.error("Failed to borrow book:", error);
       } finally {
         borrowingLoading.value = null;
       }

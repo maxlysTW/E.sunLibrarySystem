@@ -58,10 +58,10 @@
 </template>
 
 <script>
-import { ref, reactive, nextTick } from "vue";
+import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import axios from "axios";
+import { authService } from "../services";
 
 export default {
   name: "Login",
@@ -96,45 +96,28 @@ export default {
         await loginFormRef.value.validate();
         loading.value = true;
 
-        // 發送登入請求
-        const response = await axios.post(
-          "http://localhost:8080/api/auth/login",
-          loginForm
-        );
+        // 使用 authService 進行登入
+        const response = await authService.login(loginForm);
 
-        // 檢查 API 回應格式並處理登入成功
-        if (response.data.success && response.data.data) {
-          const loginData = response.data.data;
-          console.log("Login response data:", loginData); // 調試用
+        // 檢查登入成功
+        if (response.success && response.data) {
+          const loginData = response.data;
 
           // 儲存使用者資訊到本地儲存
           localStorage.setItem("token", loginData.token);
           localStorage.setItem("userName", loginData.userName);
-          console.log("Stored token:", localStorage.getItem("token")); // 調試用
 
-          ElMessage.success(response.data.message || "登入成功！");
+          ElMessage.success(response.message || "登入成功！");
 
-          // 觸發登入狀態更新事件，通知其他組件
+          // 觸發登入狀態更新事件
           window.dispatchEvent(new CustomEvent("loginStateChanged"));
 
-          // 等待 DOM 更新完成後再跳轉到書籍頁面
-          await nextTick();
+          // 跳轉到書籍頁面
           await router.push("/books");
-        } else {
-          ElMessage.error(response.data.message || "登入失敗");
         }
       } catch (error) {
-        // 錯誤處理
-        if (error.response && error.response.data) {
-          // 處理 API 錯誤回應
-          const errorData = error.response.data;
-          const errorMessage = errorData.message || "登入失敗";
-          ElMessage.error(errorMessage);
-        } else if (error.request) {
-          ElMessage.error("網路連線錯誤，請檢查網路設定");
-        } else {
-          ElMessage.error("發生未知錯誤，請稍後再試");
-        }
+        // 錯誤已由 API 攔截器處理，這裡只需要記錄
+        console.error("Login failed:", error);
       } finally {
         loading.value = false;
       }
