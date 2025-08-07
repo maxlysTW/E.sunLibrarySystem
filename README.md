@@ -7,7 +7,7 @@ Demo Video: https://youtu.be/8GFEu_dkTZs
 - 專案名稱：玉山圖書館借閱系統
 - 技術要求：Spring Boot + Vue.js + SQL Server
 - 完成日期：2025 年 8 月 7 日
-- 花費時間：共約16hr
+- 花費時間：共約18hr
 
 ## 開發流程
 - 確認資料庫架構與型別
