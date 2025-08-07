@@ -16,7 +16,8 @@ Demo Video: https://youtu.be/8SwSMkfDs4c
 - 透過git 連結github 進行版本控制與備份
 
 ## DB schema
-<img width="2404" height="1256" alt="schema-EsunLibrarySystem" src="https://github.com/user-attachments/assets/ef07d1f3-f7e3-4e41-a3a0-dbbfeb76e17c" />
+<img width="1340" height="690" alt="schema-EsunLibrarySystem" src="https://github.com/user-attachments/assets/641d32fa-f6de-4bda-8a5c-105bf6d3a2a4" />
+
 
 
 ## 系統架構
