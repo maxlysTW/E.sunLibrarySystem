@@ -6,6 +6,13 @@
 - 專案名稱：玉山圖書館借閱系統
 - 技術要求：Spring Boot + Vue.js + SQL Server
 - 完成日期：2025 年 8 月 7 日
+- 花費時間：共約16hr
+
+## 開發流程
+- 確認資料庫架構與型別
+- 使用Spring Initializr 建立所需Dependencies並下載於後端資料夾
+- 使用Vite 建立 Vue 前端資料夾
+- 透過git 連結github 進行版本控制與備份
 
 ## 系統架構
 ### 後端技術棧
