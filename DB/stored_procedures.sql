@@ -1,4 +1,4 @@
--- 借書存儲過程
+-- start to borrow books
 CREATE PROCEDURE sp_BorrowBook
     @UserId INT,
     @InventoryId INT,
@@ -9,7 +9,7 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
         
-        -- 檢查書籍是否可借閱
+        -- check if the book is available
         DECLARE @Status NVARCHAR(50);
         SELECT @Status = status FROM inventory WHERE inventory_id = @InventoryId;
         
@@ -19,17 +19,17 @@ BEGIN
             RETURN;
         END
         
-        -- 檢查用戶是否已借閱此書籍
+        -- check if the user has already borrowed this book
         IF EXISTS (SELECT 1 FROM borrowing_records WHERE user_id = @UserId AND inventory_id = @InventoryId AND return_time IS NULL)
         BEGIN
-            RAISERROR ('您已借閱此書籍', 16, 1);
+            RAISERROR ('您已借閱此書', 16, 1);
             RETURN;
         END
-        
-        -- 更新庫存狀態
+
+        -- update inventory status
         UPDATE inventory SET status = 'Borrowed' WHERE inventory_id = @InventoryId;
         
-        -- 創建借閱記錄
+        -- create borrowing record
         INSERT INTO borrowing_records (user_id, inventory_id, borrowing_time)
         VALUES (@UserId, @InventoryId, GETDATE());
         
@@ -45,7 +45,7 @@ BEGIN
 END
 GO
 
--- 還書存儲過程
+-- ReturnBook
 CREATE PROCEDURE sp_ReturnBook
     @UserId INT,
     @InventoryId INT,
@@ -56,7 +56,7 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
         
-        -- 查找借閱記錄
+        -- check record existence
         SELECT @RecordId = record_id 
         FROM borrowing_records 
         WHERE user_id = @UserId AND inventory_id = @InventoryId AND return_time IS NULL;
@@ -66,13 +66,13 @@ BEGIN
             RAISERROR ('沒有找到有效的借閱記錄', 16, 1);
             RETURN;
         END
-        
-        -- 更新借閱記錄
+
+        -- remove the borrowing record
         UPDATE borrowing_records 
         SET return_time = GETDATE() 
         WHERE record_id = @RecordId;
-        
-        -- 更新庫存狀態
+
+        -- update inventory status
         UPDATE inventory SET status = 'Available' WHERE inventory_id = @InventoryId;
         
         COMMIT TRANSACTION;
@@ -85,7 +85,7 @@ BEGIN
 END
 GO
 
--- 獲取用戶借閱歷史存儲過程
+-- Get user borrowing history stored procedure
 CREATE PROCEDURE sp_GetUserBorrowingHistory
     @UserId INT
 AS

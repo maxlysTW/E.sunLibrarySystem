@@ -4,6 +4,8 @@
 -- 3. Select each table to check if it was created successfully
 -- 4. collect book information, ready to insert
 -- 5. insert book information into the books table
+-- 6. break down to DDL and DML
+-- 7.create stored procedures 
 
 -- for cleaning up the database
 drop table borrowing_records;

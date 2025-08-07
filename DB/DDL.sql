@@ -1,15 +1,14 @@
--- =============================================
--- 圖書館管理系統 DDL 腳本
--- =============================================
+-- My milestone (update: 2025/08/07)
+-- EsunLibrarySystem DDL script
 
--- 創建數據庫
+-- create database
 CREATE DATABASE EsunLibrarySystem;
 GO
 
 USE EsunLibrarySystem;
 GO
 
--- 創建用戶表
+-- create users table
 CREATE TABLE users (
     user_id INT IDENTITY(1,1) PRIMARY KEY,
     phone_number NVARCHAR(20) NOT NULL UNIQUE,
@@ -20,7 +19,7 @@ CREATE TABLE users (
     last_login_time DATETIME2
 );
 
--- 創建書籍表
+-- create books table
 CREATE TABLE books (
     isbn NVARCHAR(13) PRIMARY KEY,
     name NVARCHAR(255) NOT NULL,
@@ -29,7 +28,7 @@ CREATE TABLE books (
     image_url NVARCHAR(500)
 );
 
--- 創建庫存表
+-- create inventory table
 CREATE TABLE inventory (
     inventory_id INT IDENTITY(1,1) PRIMARY KEY,
     isbn NVARCHAR(13) NOT NULL,
@@ -38,7 +37,7 @@ CREATE TABLE inventory (
     FOREIGN KEY (isbn) REFERENCES books(isbn)
 );
 
--- 創建借閱記錄表
+-- create borrowing records table
 CREATE TABLE borrowing_records (
     record_id INT IDENTITY(1,1) PRIMARY KEY,
     user_id INT NOT NULL,
@@ -49,7 +48,7 @@ CREATE TABLE borrowing_records (
     FOREIGN KEY (inventory_id) REFERENCES inventory(inventory_id)
 );
 
--- 創建索引
+-- create indexes
 CREATE INDEX idx_users_phone ON users(phone_number);
 CREATE INDEX idx_inventory_status ON inventory(status);
 CREATE INDEX idx_inventory_isbn ON inventory(isbn);
@@ -57,7 +56,7 @@ CREATE INDEX idx_borrowing_user ON borrowing_records(user_id);
 CREATE INDEX idx_borrowing_inventory ON borrowing_records(inventory_id);
 CREATE INDEX idx_borrowing_return_time ON borrowing_records(return_time);
 
--- 創建約束
+-- add constraints
 ALTER TABLE inventory ADD CONSTRAINT chk_status 
     CHECK (status IN ('Available', 'Borrowed', 'Processing', 'Lost', 'Damaged', 'Discarded'));
 
