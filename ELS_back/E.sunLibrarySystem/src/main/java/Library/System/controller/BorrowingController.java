@@ -1,3 +1,30 @@
+/**
+ * 借閱控制器 - 處理圖書借閱相關的 REST API 請求
+ * 
+ * 此控制器負責管理圖書的借閱業務，包含以下主要功能：
+ * 1. 圖書借閱 - 處理使用者借書請求
+ * 2. 圖書歸還 - 處理使用者還書請求
+ * 3. 借閱記錄查詢 - 查看使用者的借閱歷史
+ * 4. 未歸還圖書查詢 - 查看使用者目前借閱中的圖書
+ * 5. 可借閱圖書查詢 - 查看系統中可借閱的圖書
+ * 6. 圖書可借閱狀態檢查 - 檢查特定圖書是否可借閱
+ * 
+ * 權限管理：
+ * - 所有 API 都需要有效的 JWT Token 進行身份驗證
+ * - 支援跨域請求，允許前端應用程式存取
+ * 
+ * API端點：
+ * - POST /api/borrowing/borrow - 借書
+ * - POST /api/borrowing/return - 還書
+ * - GET /api/borrowing/history - 查詢借閱歷史
+ * - GET /api/borrowing/active - 查詢未歸還圖書
+ * - GET /api/borrowing/available-books - 查詢可借閱圖書
+ * - GET /api/borrowing/check-availability/{inventoryId} - 檢查圖書可借閱狀態
+ * 
+ * @author E.sun Library System Team
+ * @version 1.0
+ * @since 2025
+ */
 package Library.System.controller;
 
 import java.util.HashMap;
@@ -27,14 +54,22 @@ import Library.System.service.BorrowingService;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 public class BorrowingController {
     
+    /** 借閱服務，處理借閱相關的業務邏輯 */
     @Autowired
     private BorrowingService borrowingService;
     
+    /** JWT 工具類，負責 Token 的驗證和解析 */
     @Autowired
     private JwtUtil jwtUtil;
     
     /**
-     * 借書
+     * 借書 API
+     * 
+     * 處理使用者借書請求，包含權限驗證和借閱業務邏輯
+     * 
+     * @param token 使用者的 JWT Token，從 Authorization header 取得
+     * @param request 借書請求物件，包含要借閱的庫存ID
+     * @return ResponseEntity 包含借閱結果的 API 回應
      */
     @PostMapping("/borrow")
     public ResponseEntity<ApiResponse<Map<String, Object>>> borrowBook(
@@ -51,35 +86,27 @@ public class BorrowingController {
                         .body(ApiResponse.error("缺少 Authorization Token", "MISSING_TOKEN"));
             }
             
-            // 移除 "Bearer " 前綴
+            // 移除 "Bearer " 前綴並驗證 Token
             String jwtToken = token.replace("Bearer ", "");
             System.out.println("JWT token after removing Bearer: " + jwtToken);
             
-            // 驗證 Token
             if (!jwtUtil.validateToken(jwtToken)) {
                 System.out.println("Token validation failed");
                 return ResponseEntity.status(401)
                         .body(ApiResponse.error("無效的 Token", "INVALID_TOKEN"));
             }
             
-            // 從 token 中獲取用戶 ID
+            // 從 token 中獲取使用者 ID 並執行借閱
             Integer userId = jwtUtil.getUserIdFromToken(jwtToken);
-            
-            // 借閱書籍
             BorrowingRecord record = borrowingService.borrowBook(userId, request.getInventoryId());
             
-            // 構建響應數據
+            // 構建成功回應資料
             Map<String, Object> borrowData = new HashMap<>();
             borrowData.put("recordId", record.getRecordId());
             borrowData.put("userId", record.getUserId());
             borrowData.put("inventoryId", record.getInventoryId());
             borrowData.put("borrowingTime", record.getBorrowingTime());
-            
-            // 直接使用 inventoryId 而不是通過 inventory 關聯
-            String bookName = "Unknown";
-            // 如果需要書籍信息，可以通過 inventoryId 單獨查詢
-            
-            borrowData.put("bookName", bookName);
+            borrowData.put("bookName", "Unknown"); // 預設書名，可透過 inventoryId 進一步查詢
             
             return ResponseEntity.ok(ApiResponse.success("借閱成功", borrowData));
         } catch (Exception e) {
@@ -89,40 +116,37 @@ public class BorrowingController {
     }
     
     /**
-     * 還書
+     * 還書 API
+     * 
+     * 處理使用者還書請求，更新借閱記錄並變更圖書狀態
+     * 
+     * @param token 使用者的 JWT Token
+     * @param request 還書請求物件，包含要歸還的庫存ID
+     * @return ResponseEntity 包含歸還結果的 API 回應
      */
     @PostMapping("/return")
     public ResponseEntity<ApiResponse<Map<String, Object>>> returnBook(
             @RequestHeader("Authorization") String token,
             @RequestBody BorrowBookRequest request) {
         try {
-            // 移除 "Bearer " 前綴
-            String jwtToken = token.replace("Bearer ", "");
-            
             // 驗證 Token
+            String jwtToken = token.replace("Bearer ", "");
             if (!jwtUtil.validateToken(jwtToken)) {
                 return ResponseEntity.status(401)
                         .body(ApiResponse.error("無效的 Token", "INVALID_TOKEN"));
             }
             
-            // 從 token 中獲取用戶 ID
+            // 執行還書業務邏輯
             Integer userId = jwtUtil.getUserIdFromToken(jwtToken);
-            
-            // 歸還書籍
             BorrowingRecord record = borrowingService.returnBook(userId, request.getInventoryId());
             
-            // 構建響應數據
+            // 構建成功回應資料
             Map<String, Object> returnData = new HashMap<>();
             returnData.put("recordId", record.getRecordId());
             returnData.put("userId", record.getUserId());
             returnData.put("inventoryId", record.getInventoryId());
             returnData.put("returnTime", record.getReturnTime());
-            
-            // 直接使用 inventoryId 而不是通過 inventory 關聯
-            String bookName = "Unknown";
-            // 如果需要書籍信息，可以通過 inventoryId 單獨查詢
-            
-            returnData.put("bookName", bookName);
+            returnData.put("bookName", "Unknown"); // 預設書名，可透過 inventoryId 進一步查詢
             
             return ResponseEntity.ok(ApiResponse.success("歸還成功", returnData));
         } catch (Exception e) {
@@ -132,16 +156,19 @@ public class BorrowingController {
     }
     
     /**
-     * 查詢使用者的借閱紀錄
+     * 查詢使用者借閱歷史記錄 API
+     * 
+     * 取得指定使用者的完整借閱歷史，包含已歸還和未歸還的記錄
+     * 
+     * @param token 使用者的 JWT Token
+     * @return ResponseEntity 包含借閱歷史列表的 API 回應
      */
     @GetMapping("/history")
     public ResponseEntity<ApiResponse<List<BorrowingResponse>>> getBorrowingHistory(
             @RequestHeader("Authorization") String token) {
         try {
-            // 移除 "Bearer " 前綴
+            // 驗證 Token 並查詢借閱歷史
             String jwtToken = token.replace("Bearer ", "");
-            
-            // 驗證 Token
             if (!jwtUtil.validateToken(jwtToken)) {
                 return ResponseEntity.status(401)
                         .body(ApiResponse.error("無效的 Token", "INVALID_TOKEN"));
@@ -158,16 +185,19 @@ public class BorrowingController {
     }
     
     /**
-     * 查詢使用者的未歸還書籍
+     * 查詢使用者未歸還圖書 API
+     * 
+     * 取得指定使用者目前借閱中（未歸還）的圖書清單
+     * 
+     * @param token 使用者的 JWT Token
+     * @return ResponseEntity 包含未歸還圖書列表的 API 回應
      */
     @GetMapping("/active")
     public ResponseEntity<ApiResponse<List<BorrowingResponse>>> getActiveBorrowings(
             @RequestHeader("Authorization") String token) {
         try {
-            // 移除 "Bearer " 前綴
+            // 驗證 Token 並查詢未歸還圖書
             String jwtToken = token.replace("Bearer ", "");
-            
-            // 驗證 Token
             if (!jwtUtil.validateToken(jwtToken)) {
                 return ResponseEntity.status(401)
                         .body(ApiResponse.error("無效的 Token", "INVALID_TOKEN"));
@@ -184,13 +214,18 @@ public class BorrowingController {
     }
     
     /**
-     * 查詢可借閱的書籍
+     * 查詢系統中可借閱的圖書 API
+     * 
+     * 取得所有狀態為可借閱的圖書庫存項目
+     * 
+     * @return ResponseEntity 包含可借閱圖書列表的 API 回應
      */
     @GetMapping("/available-books")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getAvailableBooks() {
         try {
             List<Library.System.entity.Inventory> availableBooks = borrowingService.getAvailableBooks();
             
+            // 構建回應資料，包含圖書清單和總數
             Map<String, Object> booksData = new HashMap<>();
             booksData.put("books", availableBooks);
             booksData.put("totalCount", availableBooks.size());
@@ -203,7 +238,12 @@ public class BorrowingController {
     }
     
     /**
-     * 檢查特定書籍是否可借閱
+     * 檢查特定圖書的可借閱狀態 API
+     * 
+     * 根據庫存ID檢查該圖書項目是否可以借閱
+     * 
+     * @param inventoryId 庫存項目ID
+     * @return ResponseEntity 包含可借閱狀態資訊的 API 回應
      */
     @GetMapping("/check-availability/{inventoryId}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> checkBookAvailability(
@@ -211,6 +251,7 @@ public class BorrowingController {
         try {
             boolean isAvailable = borrowingService.isBookAvailable(inventoryId);
             
+            // 構建狀態回應資料
             Map<String, Object> availabilityData = new HashMap<>();
             availabilityData.put("inventoryId", inventoryId);
             availabilityData.put("isAvailable", isAvailable);

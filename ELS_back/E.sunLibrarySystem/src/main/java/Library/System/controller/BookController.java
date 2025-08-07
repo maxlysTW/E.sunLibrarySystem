@@ -1,3 +1,25 @@
+/**
+ * 圖書控制器 - 處理圖書相關的 REST API 請求
+ * 
+ * 此控制器負責管理圖書的各種操作，包含以下主要功能：
+ * 1. 圖書查詢 - 支援多種查詢方式（全部、ISBN、書名、作者）
+ * 2. 圖書庫存資訊查詢 - 顯示圖書的可借閱狀態
+ * 3. 圖書新增 - 添加新的圖書到系統中（測試功能）
+ * 4. 庫存管理 - 管理圖書的庫存項目（測試功能）
+ * 
+ * API端點：
+ * - GET /api/books/available - 查詢可借閱圖書
+ * - GET /api/books/{isbn} - 根據ISBN查詢圖書
+ * - GET /api/books/search/name - 根據書名搜尋圖書
+ * - GET /api/books/search/author - 根據作者搜尋圖書
+ * - GET /api/books/all - 查詢所有圖書
+ * - POST /api/books/add - 添加新圖書
+ * - POST /api/books/inventory/add - 添加庫存項目
+ * 
+ * @author E.sun Library System Team
+ * @version 1.0
+ * @since 2025
+ */
 package Library.System.controller;
 
 import java.util.List;
@@ -25,11 +47,16 @@ import Library.System.service.BookService;
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 public class BookController {
     
+    /** 圖書服務，處理圖書相關的業務邏輯 */
     @Autowired
     private BookService bookService;
     
     /**
-     * 查詢所有書籍（包含庫存信息）
+     * 查詢所有可借閱的圖書（包含庫存資訊）
+     * 
+     * 回傳系統中所有圖書的清單，每本書都會附帶庫存狀態資訊
+     * 
+     * @return ResponseEntity 包含圖書列表的 API 回應
      */
     @GetMapping("/available")
     public ResponseEntity<ApiResponse<List<InventoryResponse>>> getAvailableBooks() {
@@ -43,7 +70,12 @@ public class BookController {
     }
     
     /**
-     * 根據 ISBN 查詢書籍
+     * 根據 ISBN 查詢特定圖書
+     * 
+     * 透過國際標準書號 (ISBN) 精確查找圖書資訊
+     * 
+     * @param isbn 國際標準書號
+     * @return ResponseEntity 包含圖書資訊的 API 回應
      */
     @GetMapping("/{isbn}")
     public ResponseEntity<ApiResponse<Book>> getBookByIsbn(@PathVariable String isbn) {
@@ -58,7 +90,12 @@ public class BookController {
     }
     
     /**
-     * 根據書名查詢書籍
+     * 根據書名查詢圖書
+     * 
+     * 透過完整的書名搜尋圖書資訊
+     * 
+     * @param name 圖書名稱
+     * @return ResponseEntity 包含圖書資訊的 API 回應
      */
     @GetMapping("/search/name")
     public ResponseEntity<ApiResponse<Book>> getBookByName(@RequestParam String name) {
@@ -73,7 +110,12 @@ public class BookController {
     }
     
     /**
-     * 根據作者查詢書籍
+     * 根據作者查詢圖書
+     * 
+     * 透過作者姓名搜尋該作者的圖書作品
+     * 
+     * @param author 作者姓名
+     * @return ResponseEntity 包含圖書資訊的 API 回應
      */
     @GetMapping("/search/author")
     public ResponseEntity<ApiResponse<Book>> getBookByAuthor(@RequestParam String author) {
@@ -88,7 +130,11 @@ public class BookController {
     }
     
     /**
-     * 查詢所有書籍（包含庫存信息）
+     * 查詢所有圖書（包含庫存資訊）
+     * 
+     * 回傳系統中所有圖書的完整清單，包含每本書的庫存狀態
+     * 
+     * @return ResponseEntity 包含所有圖書列表的 API 回應
      */
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<InventoryResponse>>> getAllBooks() {
@@ -102,7 +148,12 @@ public class BookController {
     }
     
     /**
-     * 添加書籍（測試用）
+     * 添加新圖書到系統中（測試功能）
+     * 
+     * 接收圖書基本資訊並創建新的圖書記錄
+     * 
+     * @param request 包含圖書資訊的請求物件
+     * @return ResponseEntity 包含新增圖書資訊的 API 回應
      */
     @PostMapping("/add")
     public ResponseEntity<ApiResponse<Book>> addBook(@RequestBody Map<String, Object> request) {
@@ -122,7 +173,12 @@ public class BookController {
     }
     
     /**
-     * 添加庫存（測試用）
+     * 為指定圖書添加庫存項目（測試功能）
+     * 
+     * 為已存在的圖書創建新的庫存記錄，增加可借閱的數量
+     * 
+     * @param request 包含 ISBN 的請求物件
+     * @return ResponseEntity 包含新增庫存資訊的 API 回應
      */
     @PostMapping("/inventory/add")
     public ResponseEntity<ApiResponse<Inventory>> addInventory(@RequestBody Map<String, Object> request) {
