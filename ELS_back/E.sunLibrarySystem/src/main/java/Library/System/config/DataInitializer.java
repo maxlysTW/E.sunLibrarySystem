@@ -1,5 +1,10 @@
 package Library.System.config;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -11,64 +16,70 @@ import Library.System.repository.InventoryRepository;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
-
+    
+    /** 日誌記錄器，用於記錄資料初始化的過程 */
+    private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
+    
     @Autowired
     private BookRepository bookRepository;
-
+    
     @Autowired
     private InventoryRepository inventoryRepository;
-
+    
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("開始檢查資料初始化...");
-        long bookCount = bookRepository.count();
-        System.out.println("當前書籍數量: " + bookCount);
+        logger.info("開始檢查資料初始化...");
         
-        // 檢查是否已有資料
+        long bookCount = bookRepository.count();
+        logger.info("當前書籍數量: {}", bookCount);
+        
         if (bookCount == 0) {
-            System.out.println("沒有書籍資料，開始初始化...");
+            logger.info("沒有書籍資料，開始初始化...");
             initializeBooks();
         } else {
-            System.out.println("已有書籍資料，跳過初始化");
+            logger.info("已有書籍資料，跳過初始化");
         }
     }
-
+    
     private void initializeBooks() {
-        // 創建書籍
-        Book book1 = new Book();
-        book1.setIsbn("9789863128359");
-        book1.setName("AI Artificial Intelligence Introduction");
-        book1.setAuthor("Luo Guangzhi");
-        book1.setIntroduction("This is an introductory book about artificial intelligence, suitable for beginners.");
-        book1.setImageUrl("https://s2.eslite.com/unsafe/fit-in/x900/s.eslite.com/b2b/newItem/2025/07/17/172_111600119_629_mainCoverImage1.jpg");
-        bookRepository.save(book1);
-
-        Book book2 = new Book();
-        book2.setIsbn("9786264250559");
-        book2.setName("Cybersecurity Handbook");
-        book2.setAuthor("Steve Wilson");
-        book2.setIntroduction("This is a practical handbook about information security.");
-        book2.setImageUrl("https://s2.eslite.com/unsafe/fit-in/x900/s.eslite.com/b2b/newItem/2025/06/24/8113_112533581_874_mainCoverImage1.jpg");
-        bookRepository.save(book2);
-
-        Book book3 = new Book();
-        book3.setIsbn("9789865022686");
-        book3.setName("Java Programming");
-        book3.setAuthor("Cai Wenlong");
-        book3.setIntroduction("This is a basic Java programming textbook.");
-        book3.setImageUrl("https://s2.eslite.com/unsafe/fit-in/x900/s.eslite.com/Upload/Product/201910/o/637056885942171250.jpg");
-        bookRepository.save(book3);
-
-        // 創建庫存
-        Inventory inventory1 = new Inventory("9789863128359", "Available");
-        inventoryRepository.save(inventory1);
-
-        Inventory inventory2 = new Inventory("9786264250559", "Available");
-        inventoryRepository.save(inventory2);
-
-        Inventory inventory3 = new Inventory("9789865022686", "Available");
-        inventoryRepository.save(inventory3);
-
-        System.out.println("資料初始化完成！");
+        List<Book> books = Arrays.asList(
+            new Book("9789865020059", "原子習慣", "詹姆斯‧克利爾", 
+                    "本書作者詹姆斯‧克利爾是習慣養成領域的專家，他將複雜的行為科學簡化為實用的策略，幫助讀者建立好習慣、戒除壞習慣。", 
+                    "https://example.com/atomic-habits.jpg"),
+            
+            new Book("9789865020060", "深度工作力", "卡爾‧紐波特", 
+                    "在分心時代，專注力是最稀缺的資源。本書提供實用的策略，幫助你在充滿干擾的世界中培養深度工作的能力。", 
+                    "https://example.com/deep-work.jpg"),
+            
+            new Book("9789865020061", "刻意練習", "安德斯‧艾瑞克森", 
+                    "本書揭示卓越表現背後的秘密：刻意練習。作者透過研究各行各業的頂尖人才，說明如何透過有目的的練習達到專業水準。", 
+                    "https://example.com/deliberate-practice.jpg"),
+            
+            new Book("9789865020062", "心流", "米哈里‧契克森米哈賴", 
+                    "心流是一種完全沉浸於當下活動的狀態，本書探討如何創造更多的心流體驗，讓生活更加充實和有意義。", 
+                    "https://example.com/flow.jpg"),
+            
+            new Book("9789865020063", "思考，快與慢", "丹尼爾‧康納曼", 
+                    "諾貝爾經濟學獎得主丹尼爾‧康納曼探討人類思考的兩種模式：快速直覺的系統一和緩慢理性的系統二。", 
+                    "https://example.com/thinking-fast-and-slow.jpg")
+        );
+        
+        for (Book book : books) {
+            try {
+                Book savedBook = bookRepository.save(book);
+                logger.debug("成功保存書籍: ISBN: {}, 書名: {}", savedBook.getIsbn(), savedBook.getName());
+                
+                // 為每本書創建庫存項目
+                Inventory inventory = new Inventory(savedBook.getIsbn(), "Available");
+                Inventory savedInventory = inventoryRepository.save(inventory);
+                logger.debug("成功創建庫存: 庫存ID: {}, ISBN: {}", savedInventory.getInventoryId(), savedInventory.getIsbn());
+                
+            } catch (Exception e) {
+                logger.error("初始化書籍失敗: ISBN: {}, 書名: {}, 錯誤: {}", 
+                           book.getIsbn(), book.getName(), e.getMessage(), e);
+            }
+        }
+        
+        logger.info("資料初始化完成！");
     }
 } 

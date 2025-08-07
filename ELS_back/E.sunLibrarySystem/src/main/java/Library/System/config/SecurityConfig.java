@@ -20,9 +20,9 @@
  * - /api/borrowing/** - 公開存取（借閱功能，實際權限在業務邏輯中控制）
  * - 其他端點 - 需要身份驗證
  * 
- * @author E.sun Library System Team
+ * @author MaxLin
  * @version 1.0
- * @since 2025
+ * @since 2025/08/07
  */
 package Library.System.config;
 

@@ -11,9 +11,9 @@
  * - 主鍵：isbn (國際標準書號)
  * - 支援中文內容儲存
  * 
- * @author E.sun Library System Team
+ * @author MaxLin
  * @version 1.0
- * @since 2025
+ * @since 2025/08/07
  */
 package Library.System.entity;
 

@@ -13,9 +13,9 @@
  * - 借閱歷史記錄查詢
  * - JWT Token 身份驗證
  * 
- * @author E.sun Library System Team
+ * @author MaxLin
  * @version 1.0
- * @since 2025
+ * @since 2025/08/07
  */
 package Library.System;
 

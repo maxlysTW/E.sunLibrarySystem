@@ -14,9 +14,9 @@
  * - 輸入參數嚴格驗證
  * - 完整的錯誤處理和日誌記錄
  * 
- * @author E.sun Library System Team
+ * @author MaxLin
  * @version 1.0
- * @since 2025
+ * @since 2025/08/07
  */
 package Library.System.service;
 

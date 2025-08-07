@@ -11,9 +11,9 @@
  * - 主鍵：user_id (自動遞增)
  * - 唯一約束：phone_number (手機號碼)
  * 
- * @author E.sun Library System Team
+ * @author MaxLin
  * @version 1.0
- * @since 2025
+ * @since 2025/08/07
  */
 package Library.System.entity;
 

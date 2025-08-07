@@ -22,9 +22,9 @@
  * }
  * 
  * @param <T> 回應資料的類型，支援泛型
- * @author E.sun Library System Team
+ * @author MaxLin
  * @version 1.0
- * @since 2025
+ * @since 2025/08/07
  */
 package Library.System.dto;
 

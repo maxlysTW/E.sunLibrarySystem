@@ -12,9 +12,9 @@
  * - 主鍵：inventory_id (自動遞增)
  * - 外鍵：isbn (關聯到 books 表)
  * 
- * @author E.sun Library System Team
+ * @author MaxLin
  * @version 1.0
- * @since 2025
+ * @since 2025/08/07
  */
 package Library.System.entity;
 

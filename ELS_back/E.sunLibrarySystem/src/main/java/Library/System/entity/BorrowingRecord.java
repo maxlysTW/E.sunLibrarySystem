@@ -12,9 +12,9 @@
  * - 主鍵：record_id (自動遞增)
  * - 外鍵：user_id (關聯到 users 表)、inventory_id (關聯到 inventory 表)
  * 
- * @author E.sun Library System Team
+ * @author MaxLin
  * @version 1.0
- * @since 2025
+ * @since 2025/08/07
  */
 package Library.System.entity;
 

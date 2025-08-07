@@ -17,9 +17,9 @@
  * - 密碼加密過程不可逆，請妥善保存鹽值
  * - 建議定期更新密碼以維持帳號安全
  * 
- * @author E.sun Library System Team
+ * @author MaxLin
  * @version 1.0
- * @since 2025
+ * @since 2025/08/07
  */
 package Library.System.common;
 

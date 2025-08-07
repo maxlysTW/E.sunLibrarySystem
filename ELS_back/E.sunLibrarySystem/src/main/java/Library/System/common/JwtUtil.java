@@ -14,12 +14,12 @@
  * - 詳細的日誌記錄
  * 
  * 配置參數：
- * - jwt.secret: JWT 簽章密鑰（需在 application.properties 中設定）
+ * - jwt.secret: JWT 簽章密鑰（於 application.properties 中設定）
  * - jwt.expiration: Token 過期時間（毫秒）
  * 
- * @author E.sun Library System Team
+ * @author MaxLin
  * @version 1.0
- * @since 2025
+ * @since 2025/08/07
  */
 package Library.System.common;
 

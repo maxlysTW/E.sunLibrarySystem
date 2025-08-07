@@ -11,15 +11,17 @@
  * - POST /api/auth/register - 使用者註冊
  * - POST /api/auth/login - 使用者登入
  * 
- * @author E.sun Library System Team
+ * @author MaxLin
  * @version 1.0
- * @since 2025
+ * @since 2025/08/07
  */
 package Library.System.controller;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -41,6 +43,9 @@ import jakarta.validation.Valid;
 @Validated
 public class AuthController {
     
+    /** 日誌記錄器，用於記錄認證控制器的運行過程 */
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+    
     /** 使用者服務，處理使用者相關的業務邏輯 */
     @Autowired
     private UserService userService;
@@ -59,6 +64,9 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Map<String, Object>>> register(@Valid @RequestBody UserRegistrationRequest request) {
+        logger.info("收到使用者註冊請求 - 手機號碼: {}, 使用者名稱: {}", 
+                   request.getPhoneNumber(), request.getUserName());
+        
         try {
             // 呼叫使用者服務進行註冊
             User user = userService.registerUser(
@@ -74,11 +82,20 @@ public class AuthController {
             userData.put("phoneNumber", user.getPhoneNumber());
             userData.put("registrationTime", user.getRegistrationTime());
             
+            logger.info("使用者註冊成功 - 使用者ID: {}, 手機號碼: {}", 
+                       user.getUserId(), user.getPhoneNumber());
+            
             return ResponseEntity.ok(ApiResponse.success("註冊成功", userData));
-        } catch (Exception e) {
-            // 處理註冊失敗的情況
+        } catch (RuntimeException e) {
+            logger.warn("使用者註冊失敗 - 業務邏輯錯誤: 手機號碼: {}, 錯誤: {}", 
+                       request.getPhoneNumber(), e.getMessage());
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error(e.getMessage(), "REGISTRATION_ERROR"));
+        } catch (Exception e) {
+            logger.error("使用者註冊失敗 - 系統錯誤: 手機號碼: {}, 錯誤: {}", 
+                        request.getPhoneNumber(), e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("註冊失敗，請稍後再試", "SYSTEM_ERROR"));
         }
     }
     
@@ -92,6 +109,8 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Map<String, Object>>> login(@Valid @RequestBody LoginRequest request) {
+        logger.info("收到使用者登入請求 - 手機號碼: {}", request.getPhoneNumber());
+        
         try {
             // 驗證使用者身份
             User user = userService.loginUser(request.getPhoneNumber(), request.getPassword());
@@ -99,19 +118,28 @@ public class AuthController {
             // 生成 JWT Token
             String token = jwtUtil.generateToken(user.getUserId(), user.getPhoneNumber());
             
-            // 建構登入回應資料
+            // 建構回應資料
             Map<String, Object> loginData = new HashMap<>();
-            loginData.put("token", token);
             loginData.put("userId", user.getUserId());
             loginData.put("userName", user.getUserName());
             loginData.put("phoneNumber", user.getPhoneNumber());
+            loginData.put("token", token);
             loginData.put("lastLoginTime", user.getLastLoginTime());
             
+            logger.info("使用者登入成功 - 使用者ID: {}, 手機號碼: {}", 
+                       user.getUserId(), user.getPhoneNumber());
+            
             return ResponseEntity.ok(ApiResponse.success("登入成功", loginData));
-        } catch (Exception e) {
-            // 處理登入失敗的情況
+        } catch (RuntimeException e) {
+            logger.warn("使用者登入失敗 - 業務邏輯錯誤: 手機號碼: {}, 錯誤: {}", 
+                       request.getPhoneNumber(), e.getMessage());
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error(e.getMessage(), "LOGIN_ERROR"));
+        } catch (Exception e) {
+            logger.error("使用者登入失敗 - 系統錯誤: 手機號碼: {}, 錯誤: {}", 
+                        request.getPhoneNumber(), e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("登入失敗，請稍後再試", "SYSTEM_ERROR"));
         }
     }
 } 
