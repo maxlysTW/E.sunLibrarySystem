@@ -61,6 +61,10 @@ Demo Video: https://youtu.be/8SwSMkfDs4c
 - JWT Token 驗證
 - 輸入驗證與防護
 
+### 5. 其他
+- 前端 API 透過 Service 統一管理以利日後擴充
+- 後端透過 logger 追蹤程式碼，以利維護與偵錯問題
+
 ## 專案結構
 ```
 E.sunLibrarySystem/
